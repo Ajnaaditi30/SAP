@@ -3,12 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm --prefix server start\" \"npm --prefix client start\"",
+    "dev": "npm --prefix client start",
     "client": "npm --prefix client start",
-    "server": "npm --prefix server start",
     "build": "npm --prefix client run build"
-  },
-  "dependencies": {
-    "concurrently": "^9.2.1"
   }
 }

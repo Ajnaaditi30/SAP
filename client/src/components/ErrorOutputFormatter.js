@@ -9,6 +9,21 @@ const SECTION_TITLES = [
   "Risk Level"
 ];
 
+const SECTION_ALIASES = {
+  meaning: "Meaning",
+  cause: "Cause",
+  fix: "Fix Steps",
+  fixes: "Fix Steps",
+  "fix steps": "Fix Steps",
+  resolution: "Fix Steps",
+  "time to fix": "Time to Fix",
+  time: "Time to Fix",
+  owner: "Who Can Fix",
+  "who can fix": "Who Can Fix",
+  risk: "Risk Level",
+  "risk level": "Risk Level"
+};
+
 const SECTION_ICONS = {
   Meaning: "info",
   Cause: "travel_explore",
@@ -20,7 +35,7 @@ const SECTION_ICONS = {
 
 const normalizeTitle = (title) => {
   const cleanTitle = title.replace(/^[^\w]+/, "").trim().toLowerCase();
-  return SECTION_TITLES.find((sectionTitle) => sectionTitle.toLowerCase() === cleanTitle) || title.trim();
+  return SECTION_ALIASES[cleanTitle] || title.trim();
 };
 
 const parseSections = (text) => {
@@ -34,7 +49,7 @@ const parseSections = (text) => {
   }
 
   const sections = [];
-  const headerPattern = /(?:^|\n)\s*(?:[*#\-\d.)\s]*)?(Meaning|Cause|Fix Steps|Time to Fix|Who Can Fix|Risk Level)\s*:\s*/gi;
+  const headerPattern = /(?:^|\n)\s*(?:[*#\-\d.)\s]*|[^\w\s])*\s*(Meaning|Cause|Fix(?:es| Steps)?|Resolution|Time(?: to Fix)?|Who Can Fix|Owner|Risk(?: Level)?)\s*:\s*/gi;
   const matches = [...source.matchAll(headerPattern)];
 
   if (!matches.length) {

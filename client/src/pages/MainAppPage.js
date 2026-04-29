@@ -62,12 +62,12 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
     setSaveSuccess(false);
 
     try {
-      const response = await fetch("http://localhost:5000/decode", {
+      const response = await fetch("/api/decode", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ error: trimmedError, doNotSave })
+        body: JSON.stringify({ error: trimmedError })
       });
 
       if (!response.ok) {
@@ -88,7 +88,7 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
       }
     } catch (error) {
       console.error("Decode failed:", error);
-      setErrorMessage("Unable to decode this error right now. Check that the API server is running and try again.");
+      setErrorMessage("Unable to decode error. Please try again.");
       setResult(DEFAULT_RESULT);
       setConfidence("Low");
     } finally {

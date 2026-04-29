@@ -167,5 +167,5 @@ Error: ${maskedError}`;
 });
 
 app.listen(PORT, () => {
-  console.log(`SAP decoder server running on http://localhost:${PORT}`);
+  console.log(`SAP decoder server running on port ${PORT}`);
 });
