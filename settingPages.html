@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Settings | SAP Error Decoder</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#bdbefe",
+                        "tertiary": "#904900",
+                        "tertiary-fixed": "#ffdcc5",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f5f2fe",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface": "#fcf8ff",
+                        "on-secondary-fixed-variant": "#404178",
+                        "on-surface": "#1b1b23",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "background": "#fcf8ff",
+                        "tertiary-container": "#b55d00",
+                        "surface-dim": "#dbd8e4",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#575992",
+                        "on-secondary-fixed": "#13144a",
+                        "inverse-primary": "#c0c1ff",
+                        "surface-bright": "#fcf8ff",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "primary-fixed": "#e1e0ff",
+                        "surface-container": "#efecf8",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e9e6f3",
+                        "on-tertiary-container": "#fffbff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#703700",
+                        "outline": "#767586",
+                        "on-secondary-container": "#494b83",
+                        "on-primary-fixed": "#07006c",
+                        "surface-container-highest": "#e4e1ed",
+                        "surface-tint": "#494bd6",
+                        "secondary-fixed": "#e1e0ff",
+                        "on-primary-container": "#fffbff",
+                        "on-surface-variant": "#464554",
+                        "outline-variant": "#c7c4d7",
+                        "primary": "#4648d4",
+                        "primary-container": "#6063ee",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#303038",
+                        "surface-variant": "#e4e1ed",
+                        "inverse-on-surface": "#f2effb",
+                        "secondary-fixed-dim": "#c0c1ff",
+                        "on-tertiary-fixed": "#301400",
+                        "on-background": "#1b1b23"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(252, 248, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface min-h-screen selection:bg-primary-fixed selection:text-on-primary-fixed">
+    <!-- TopAppBar -->
+    <header
+        class="docked full-width top-0 z-40 flex justify-between items-center w-full px-6 py-4 bg-[#fcf8ff] dark:bg-slate-950">
+        <div class="flex items-center gap-4">
+            <span class="material-symbols-outlined text-[#4648d4] dark:text-[#6063ee] cursor-pointer">menu</span>
+            <h1 class="text-2xl font-black tracking-[-0.02em] text-[#4648d4] dark:text-[#6063ee]">SAP Error Decoder</h1>
+        </div>
+        <div class="flex items-center gap-6">
+            <nav class="hidden md:flex gap-8 items-center">
+                <a class="font-['Inter'] font-medium text-[#1b1b23]/70 dark:text-slate-400 hover:bg-[#efecf8] transition-colors px-3 py-1 rounded-lg"
+                    href="#">Diagnostics</a>
+                <a class="font-['Inter'] font-medium text-[#1b1b23]/70 dark:text-slate-400 hover:bg-[#efecf8] transition-colors px-3 py-1 rounded-lg"
+                    href="#">History</a>
+                <a class="font-['Inter'] font-bold tracking-tight text-[#4648d4] dark:text-[#6063ee]"
+                    href="#">Settings</a>
+            </nav>
+            <div
+                class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border-2 border-primary-fixed">
+                <img alt="User profile avatar" class="w-full h-full object-cover"
+                    data-alt="Portrait of a professional system administrator with a confident expression in a clean studio setting"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgTJQIZHQh--78YHjh_oz8-zQ2xPF4s8Imo8PSB6nrUJPWuIrhFr7PcElRGue4StsDoTKmiY--Gmh1yt1uIRrcV-19VYG5zVrnmQXSHZQqOLQGAAUEKm-syXn1kBDPt3YPccZU6WrgQpn0ZeN0dQfOsm2c1PA21iNUGGQg7V336VFAvUySxlw7qlSG0XhZQZeDNCV3Bv_tqyszkUov0ZSVEoDDmZDjaMyzQKmUmXPxKdbwOO-mcjWdCrrFXrWVx0-V4S8SmFj4UKo" />
+            </div>
+        </div>
+    </header>
+    <main class="max-w-[1440px] mx-auto px-6 pt-12 pb-24 md:flex gap-12">
+        <!-- NavigationDrawer (Sidebar Desktop) -->
+        <aside
+            class="hidden md:flex flex-col h-fit w-80 rounded-r-2xl gap-2 sticky top-28 bg-[#fcf8ff] dark:bg-slate-950">
+            <div class="p-4 mb-4 flex flex-col items-start gap-1">
+                <span class="font-black text-[#4648d4] text-xl">SAP Admin</span>
+                <span class="text-sm opacity-60 font-medium">Clinical Grade Access</span>
+                <span class="text-[0.6875rem] uppercase tracking-widest font-bold mt-2 opacity-40">v2.4.1</span>
+            </div>
+            <div class="flex flex-col gap-1">
+                <button
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#1b1b23]/70 hover:bg-[#efecf8] transition-all">
+                    <span class="material-symbols-outlined">clinical_notes</span>
+                    <span class="font-medium">Diagnostics</span>
+                </button>
+                <button
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#1b1b23]/70 hover:bg-[#efecf8] transition-all">
+                    <span class="material-symbols-outlined">terminal</span>
+                    <span class="font-medium">Error Logs</span>
+                </button>
+                <button
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#1b1b23]/70 hover:bg-[#efecf8] transition-all">
+                    <span class="material-symbols-outlined">sync</span>
+                    <span class="font-medium">System Sync</span>
+                </button>
+                <button
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl bg-[#efecf8] dark:bg-[#4648d4]/10 text-[#4648d4] font-bold border-r-4 border-[#4648d4]">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+                    <span class="font-medium">Settings</span>
+                </button>
+                <button
+                    class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#1b1b23]/70 hover:bg-[#efecf8] transition-all">
+                    <span class="material-symbols-outlined">help</span>
+                    <span class="font-medium">Help</span>
+                </button>
+            </div>
+        </aside>
+        <!-- Settings Content Canvas -->
+        <div class="flex-1 max-w-4xl">
+            <div class="mb-12">
+                <h2 class="text-[3.5rem] font-bold tracking-[-0.02em] leading-tight text-on-surface mb-2">Settings</h2>
+                <p class="text-on-surface-variant font-medium">Configure your clinical diagnostic environment and sync
+                    preferences.</p>
+            </div>
+            <!-- Asymmetric Bento-style Configuration Sections -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- AI Configuration (Wide Card) -->
+                <section
+                    class="lg:col-span-12 bg-surface-container-lowest p-8 rounded-xl shadow-[0_4px_32px_rgba(27,27,35,0.02)]">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center">
+                            <span class="material-symbols-outlined text-primary">psychology</span>
+                        </div>
+                        <h3 class="text-xl font-bold">AI Configuration</h3>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="group">
+                            <label
+                                class="block text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant mb-2">Predictive
+                                Model</label>
+                            <div class="relative">
+                                <select
+                                    class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-4 text-on-surface font-medium focus:ring-2 focus:ring-primary/10 appearance-none cursor-pointer">
+                                    <option>SAP Error Decoder Turbo (Clinical Default)</option>
+                                    <option>SAP-Specialist V2</option>
+                                    <option>Legacy Decoder Pro</option>
+                                </select>
+                                <span
+                                    class="material-symbols-outlined absolute right-4 top-4 pointer-events-none text-on-surface-variant">expand_more</span>
+                            </div>
+                        </div>
+                        <div class="group">
+                            <label
+                                class="block text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant mb-2">API
+                                Authentication Key</label>
+                            <div class="flex gap-4">
+                                <input
+                                    class="flex-1 bg-surface-container-highest border-none rounded-lg px-4 py-4 text-on-surface font-mono tracking-wider focus:ring-2 focus:ring-primary/10"
+                                    type="password" value="sk-sentinel-8821-clinical-v4-x99" />
+                                <button
+                                    class="bg-surface-container-high px-6 py-4 rounded-lg font-bold text-primary hover:bg-surface-container-highest transition-colors">
+                                    Refresh
+                                </button>
+                            </div>
+                            <p class="mt-2 text-sm text-on-surface-variant opacity-60 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">info</span>
+                                Your key is encrypted with industry-standard AES-256.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+                <!-- Localization (Square Card) -->
+                <section
+                    class="lg:col-span-7 bg-surface-container-lowest p-8 rounded-xl shadow-[0_4px_32px_rgba(27,27,35,0.02)]">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-10 h-10 rounded-full bg-secondary-fixed flex items-center justify-center">
+                            <span class="material-symbols-outlined text-secondary">language</span>
+                        </div>
+                        <h3 class="text-xl font-bold">Localization</h3>
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <label
+                                class="block text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant mb-2">Diagnostic
+                                Language</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button
+                                    class="flex items-center justify-center gap-2 py-4 rounded-lg bg-primary-fixed border-2 border-primary text-on-primary-fixed font-bold">
+                                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                                    English (US)
+                                </button>
+                                <button
+                                    class="flex items-center justify-center gap-2 py-4 rounded-lg bg-surface-container text-on-surface-variant font-bold hover:bg-surface-container-high transition-all">
+                                    Deutsch
+                                </button>
+                                <button
+                                    class="flex items-center justify-center gap-2 py-4 rounded-lg bg-surface-container text-on-surface-variant font-bold hover:bg-surface-container-high transition-all">
+                                    Français
+                                </button>
+                                <button
+                                    class="flex items-center justify-center gap-2 py-4 rounded-lg bg-surface-container text-on-surface-variant font-bold hover:bg-surface-container-high transition-all">
+                                    Español
+                                </button>
+                            </div>
+                        </div>
+                        <div class="pt-4">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <div
+                                    class="w-12 h-6 bg-surface-container rounded-full relative transition-colors group-hover:bg-surface-container-highest">
+                                    <div
+                                        class="absolute left-1 top-1 w-4 h-4 bg-primary rounded-full translate-x-6 transition-transform">
+                                    </div>
+                                </div>
+                                <span class="font-medium text-on-surface-variant">Enable Regional Error Syntax</span>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+                <!-- Account Sync (Square Card) -->
+                <section class="lg:col-span-5 bg-surface-container p-8 rounded-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center">
+                                <span class="material-symbols-outlined text-on-surface">cloud_sync</span>
+                            </div>
+                            <h3 class="text-xl font-bold">Account Sync</h3>
+                        </div>
+                        <p class="text-on-surface-variant text-sm mb-6 leading-relaxed">
+                            Synchronize your custom error notes and history across all SAP Error Decoder instances.
+                        </p>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 bg-surface-container-lowest p-3 rounded-lg">
+                            <img alt="SAP Logo Placeholder" class="w-10 h-10 rounded-md object-cover"
+                                data-alt="Abstract vibrant purple and blue flowing colors suggesting high-speed data transmission and connectivity"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDi63U1vD6hdNyuIEiVeREgK6yyCo2LPmwuE2I4FjZyuy2f3E_nnkj5uGwJxuZc5zujmGa7NYXljkn38muGDbMy68DFLjW-9dJGfkdJY_0GGkZ88mY3Phfg-ap2xr6YZa3ii2C_iIek_t18wB2IxoVUkgjdWzRp_LZUw6ZEqY9MQb5oE74Q3sOodbda8U67wVE_PyOCrnqcPTXVTmnT0n4NWL7boYi-N7FdcSDgBG0Il6tpMSG9Rbn6m4_751sGBB-TTahOjzJKXZY" />
+                            <div class="flex-1">
+                                <div class="text-xs font-black uppercase tracking-tighter">SAP Cloud Platform</div>
+                                <div class="text-sm font-medium text-primary">Connected</div>
+                            </div>
+                        </div>
+                        <button
+                            class="w-full py-4 rounded-lg bg-on-surface text-surface font-bold text-sm tracking-wide flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                            <span class="material-symbols-outlined text-lg">sync</span>
+                            Trigger Manual Sync
+                        </button>
+                    </div>
+                </section>
+                <!-- Action Footer -->
+                <div class="lg:col-span-12 flex items-center justify-end gap-4 pt-8">
+                    <button
+                        class="px-8 py-4 rounded-lg font-bold text-on-surface-variant hover:bg-surface-container transition-all">
+                        Reset to Defaults
+                    </button>
+                    <button
+                        class="px-10 py-4 rounded-lg bg-gradient-to-br from-primary to-primary-container text-white font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                        Apply Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- BottomNavBar (Mobile Only) -->
+    <nav
+        class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pb-safe pt-2 bg-[#fcf8ff] dark:bg-slate-950 shadow-[0_-4px_32px_rgba(27,27,35,0.04)] z-50 rounded-t-2xl">
+        <a class="flex flex-col items-center justify-center text-[#1b1b23]/60 dark:text-slate-400 px-5 py-2 hover:text-[#4648d4] transition-all"
+            href="#">
+            <span class="material-symbols-outlined">search</span>
+            <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em] mt-1">Decode</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-[#1b1b23]/60 dark:text-slate-400 px-5 py-2 hover:text-[#4648d4] transition-all"
+            href="#">
+            <span class="material-symbols-outlined">history</span>
+            <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em] mt-1">History</span>
+        </a>
+        <a class="flex flex-col items-center justify-center bg-[#e1e0ff] dark:bg-[#4648d4]/20 text-[#4648d4] rounded-2xl px-5 py-2 ease-in-out transform duration-300"
+            href="#">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+            <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em] mt-1">Settings</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-[#1b1b23]/60 dark:text-slate-400 px-5 py-2 hover:text-[#4648d4] transition-all"
+            href="#">
+            <span class="material-symbols-outlined">bookmark</span>
+            <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em] mt-1">Saved</span>
+        </a>
+    </nav>
+</body>
+
+</html>

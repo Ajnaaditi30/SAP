@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SAP Error Decoder</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#bdbefe",
+                        "tertiary": "#904900",
+                        "tertiary-fixed": "#ffdcc5",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f5f2fe",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface": "#fcf8ff",
+                        "on-secondary-fixed-variant": "#404178",
+                        "on-surface": "#1b1b23",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "background": "#fcf8ff",
+                        "tertiary-container": "#b55d00",
+                        "surface-dim": "#dbd8e4",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#575992",
+                        "on-secondary-fixed": "#13144a",
+                        "inverse-primary": "#c0c1ff",
+                        "surface-bright": "#fcf8ff",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "primary-fixed": "#e1e0ff",
+                        "surface-container": "#efecf8",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e9e6f3",
+                        "on-tertiary-container": "#fffbff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#703700",
+                        "outline": "#767586",
+                        "on-secondary-container": "#494b83",
+                        "on-primary-fixed": "#07006c",
+                        "surface-container-highest": "#e4e1ed",
+                        "surface-tint": "#494bd6",
+                        "secondary-fixed": "#e1e0ff",
+                        "on-primary-container": "#fffbff",
+                        "on-surface-variant": "#464554",
+                        "outline-variant": "#c7c4d7",
+                        "primary": "#4648d4",
+                        "primary-container": "#6063ee",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#303038",
+                        "surface-variant": "#e4e1ed",
+                        "inverse-on-surface": "#f2effb",
+                        "secondary-fixed-dim": "#c0c1ff",
+                        "on-tertiary-fixed": "#301400",
+                        "on-background": "#1b1b23"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .clinical-gradient {
+            background: linear-gradient(135deg, #4648d4 0%, #6063ee 100%);
+        }
+
+        .glass-modal {
+            background: rgba(252, 248, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary-fixed selection:text-on-primary-fixed">
+    <!-- TopAppBar -->
+    <header
+        class="docked full-width top-0 bg-[#fcf8ff] dark:bg-slate-950 flex justify-between items-center w-full px-6 py-4 z-50">
+        <div class="flex items-center gap-4">
+            <button
+                class="material-symbols-outlined text-[#4648d4] dark:text-[#6063ee] p-2 hover:bg-[#efecf8] rounded-full transition-colors duration-300"
+                data-icon="menu">menu</button>
+            <span class="text-2xl font-black tracking-[-0.02em] text-[#4648d4] dark:text-[#6063ee]">Clinical
+                Sentinel</span>
+        </div>
+        <div class="hidden md:flex gap-8 items-center">
+            <nav class="flex gap-6">
+                <a class="text-[#4648d4] dark:text-[#6063ee] font-['Inter'] font-bold tracking-tight transition-colors duration-300"
+                    href="#">Decode</a>
+                <a class="text-[#1b1b23] dark:text-slate-400 font-['Inter'] font-bold tracking-tight hover:bg-[#efecf8] transition-colors duration-300"
+                    href="#">History</a>
+                <a class="text-[#1b1b23] dark:text-slate-400 font-['Inter'] font-bold tracking-tight hover:bg-[#efecf8] transition-colors duration-300"
+                    href="#">Library</a>
+            </nav>
+            <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-highest">
+                <img alt="User profile avatar" class="w-full h-full object-cover"
+                    data-alt="Close up portrait of a professional system administrator in a clean office environment with soft natural lighting"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgmyv7KO0dU-sjDAYvFoG04G9ciybfzHDPB5VgIYNnJ9pS7dxqZ508KAdAKQEiWnE9T0bliQ6032ZqGem7kt7OoxUGCkV2mck00qV6ocMLvis4ZzvkQiuCH4PUJfl_WhM9GZFLztKywaCJ8X2PpdjeOb7GG9zK6_lNT99spEZEPDmibN6OoJEnPtIxP6RttFG237CeNYew3UK4_aM29n0NoV4TfUJJW9ZvaRxBVjdJrXJUusgSsVlVnq0dD7Hz33zh8zMdm5Jg9uk" />
+            </div>
+        </div>
+    </header>
+    <main class="relative overflow-hidden pt-12">
+        <!-- Hero Section with Asymmetry -->
+        <section class="px-6 md:px-0 md:flex">
+            <div class="md:w-[30%] hidden md:block px-12 py-24">
+                <div class="sticky top-24 space-y-4">
+                    <span
+                        class="label-sm block uppercase tracking-[0.05em] text-primary font-bold text-[0.6875rem]">Diagnostic
+                        Terminal</span>
+                    <p class="text-on-surface-variant text-sm leading-relaxed">System Status: Active<br />Node:
+                        sentinel-01<br />Ready for input...</p>
+                </div>
+            </div>
+            <div class="md:w-[70%] py-12 md:py-24 md:pr-24">
+                <h1 class="text-[3.5rem] font-black leading-[1.1] tracking-[-0.02em] text-on-surface mb-6">
+                    Understand SAP Errors <br />in Seconds
+                </h1>
+                <p class="text-xl text-on-surface-variant mb-12 max-w-xl">
+                    No consultants. No confusion. Just solutions. SAP Error Decoder turns technical jargon into
+                    actionable diagnostic steps.
+                </p>
+                <!-- The Searcher Input -->
+                <div class="relative max-w-3xl mb-16">
+                    <div
+                        class="bg-surface-container-highest rounded-full flex items-center px-8 py-6 shadow-sm group focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+                        <span class="material-symbols-outlined text-primary mr-4 text-3xl"
+                            data-icon="search">search</span>
+                        <input
+                            class="bg-transparent border-none focus:ring-0 w-full text-xl font-medium placeholder:text-outline/50"
+                            placeholder="Paste SAP Error Code (e.g., M7001 or RFC_ERROR_COMMUNICATION)" type="text" />
+                        <button
+                            class="clinical-gradient text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-primary/20 transition-all active:scale-95 ml-4">
+                            Decode an Error
+                        </button>
+                    </div>
+                </div>
+                <!-- Trust Section -->
+                <div class="flex flex-col gap-6">
+                    <span class="label-sm uppercase tracking-[0.05em] text-outline font-bold text-[0.6875rem]">Used by
+                        SAP users worldwide</span>
+                    <div class="flex flex-wrap gap-12 opacity-40 grayscale contrast-125">
+                        <div class="h-8 w-24 bg-on-surface/20 rounded-md"></div>
+                        <div class="h-8 w-32 bg-on-surface/20 rounded-md"></div>
+                        <div class="h-8 w-28 bg-on-surface/20 rounded-md"></div>
+                        <div class="h-8 w-20 bg-on-surface/20 rounded-md"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Features Bento Grid -->
+        <section class="bg-surface-container-low py-24 px-6 md:px-24">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-7xl mx-auto">
+                <!-- Main Feature -->
+                <div
+                    class="md:col-span-8 bg-surface-container-lowest p-10 rounded-lg shadow-sm flex flex-col justify-between min-h-[400px]">
+                    <div>
+                        <div class="w-12 h-12 clinical-gradient rounded-xl flex items-center justify-center mb-8">
+                            <span class="material-symbols-outlined text-white" data-icon="psychology">psychology</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-4">Instant AI Decoding</h3>
+                        <p class="text-on-surface-variant text-lg leading-relaxed max-w-md">
+                            Our proprietary engine analyzes SAP dumps and short dumps (ST22) instantly, extracting the
+                            root cause from thousands of lines of logs.
+                        </p>
+                    </div>
+                    <div class="mt-8 overflow-hidden rounded-lg">
+                        <img alt="Data visualization interface" class="w-full object-cover"
+                            data-alt="Abstract data visualization with purple and blue glowing nodes and connections on a dark technical background"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAojD9fajMA0vJVhQhGn_NNEAIfThm1-zQT28y37PR6bpEpi4F4cjtKE3wllVMTbp_yoEHbuppqKMrqFMy1lsTyymtynwskQInQwMa3wQB6rF8U97a1rdswHQwy79--jLcV1fOksb3yjJdbx8e368AZyx_D6UKEH9AGY3KPQ3LVD4CEAVc6TMUK3dOF9iMdvZrb2v1-m-A05dVGSmWnm3whliYqZZKF_53xmiFx9UBmFutaB-fbd_xccJ2bu4yfd3TGSog2ko7yqoA" />
+                    </div>
+                </div>
+                <!-- Feature 2 -->
+                <div class="md:col-span-4 bg-primary text-white p-10 rounded-lg shadow-sm flex flex-col">
+                    <span class="material-symbols-outlined text-4xl mb-8"
+                        data-icon="format_list_numbered">format_list_numbered</span>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Step-by-step Fixes</h3>
+                    <p class="text-primary-fixed/80 text-lg leading-relaxed mb-auto">
+                        We don't just tell you what's wrong. We provide a surgical guide to fixing it—including
+                        customizing paths and field settings.
+                    </p>
+                    <div class="mt-8 flex justify-end">
+                        <span class="material-symbols-outlined text-6xl opacity-20" data-icon="healing">healing</span>
+                    </div>
+                </div>
+                <!-- Feature 3 -->
+                <div class="md:col-span-4 bg-surface-container-highest p-10 rounded-lg shadow-sm">
+                    <span class="material-symbols-outlined text-primary text-3xl mb-6"
+                        data-icon="database">database</span>
+                    <h3 class="text-xl font-bold mb-3">Transaction Guidance</h3>
+                    <p class="text-on-surface-variant leading-relaxed">
+                        Navigate to the right T-Code every time. Whether it's SPRO, SE11, or BD87, we provide the exact
+                        breadcrumbs.
+                    </p>
+                </div>
+                <!-- Feature 4 (Glass Card) -->
+                <div
+                    class="md:col-span-8 glass-modal p-1 flex flex-col md:flex-row rounded-lg overflow-hidden relative border border-white/20">
+                    <div class="p-10 md:w-1/2">
+                        <h3 class="text-xl font-bold mb-3">Historical Analysis</h3>
+                        <p class="text-on-surface-variant leading-relaxed mb-6">
+                            See how many times this error has occurred in your landscape and track resolution efficiency
+                            over time.
+                        </p>
+                        <button class="text-primary font-bold flex items-center gap-2 hover:gap-3 transition-all">
+                            Explore Archive <span class="material-symbols-outlined">arrow_forward</span>
+                        </button>
+                    </div>
+                    <div class="md:w-1/2 h-64 md:h-auto">
+                        <img alt="Code analysis" class="w-full h-full object-cover"
+                            data-alt="Cinematic close-up of computer code on a high-resolution monitor with purple and blue ambient lighting and bokeh depth"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAru3lEaYrwSBYH2Ux9kXIlRLL88_MttS1bRxMdyCR76_h4KC3jLksgwDakQQCNnIsrS-O70xs2RDRe2lyO1Om9Z0_m7qMOiqAlsn1NNfOdPox54iHayc3lVw_Jqf1EvfQtOLaGhYJHE7alPRhf5erIYMlkb1SwzM9NXib0Jz6YKnMa9ulTOvNedAC2GhEflU69HVqyHF-Z5VTnV8qEjC_bwRSquRLMTykOjEt9ohVWOcEjLR7NlQdTnQ7MlaWCaGpijdpXSQ7gqYg" />
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- CTA Section -->
+        <section class="py-32 px-6 flex flex-col items-center text-center">
+            <h2 class="text-4xl md:text-5xl font-black mb-8 tracking-tight">Stop Guessing. Start Solving.</h2>
+            <p class="text-on-surface-variant text-xl mb-12 max-w-2xl">
+                Join 50,000+ Basis consultants and functional leads who have upgraded their diagnostic toolkit.
+            </p>
+            <div class="flex flex-col md:flex-row gap-4">
+                <button
+                    class="clinical-gradient text-white px-12 py-5 rounded-lg text-lg font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all">
+                    Decode My First Error
+                </button>
+                <button
+                    class="bg-surface-container-high text-on-surface-variant px-12 py-5 rounded-lg text-lg font-bold hover:bg-surface-container-highest transition-all">
+                    Watch Demo
+                </button>
+            </div>
+        </section>
+    </main>
+    <!-- Navigation Shell (Platform Pivot: Mobile Bottom Bar) -->
+    <footer class="md:hidden">
+        <nav
+            class="fixed bottom-0 left-0 w-full flex justify-around items-center pb-safe pt-2 bg-[#fcf8ff] dark:bg-slate-950 z-50 shadow-[0_-4px_32px_rgba(27,27,35,0.04)] rounded-t-2xl">
+            <div
+                class="flex flex-col items-center justify-center bg-[#e1e0ff] dark:bg-[#4648d4]/20 text-[#4648d4] rounded-2xl px-5 py-2">
+                <span class="material-symbols-outlined" data-icon="search">search</span>
+                <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em]">Decode</span>
+            </div>
+            <div
+                class="flex flex-col items-center justify-center text-[#1b1b23]/60 dark:text-slate-400 px-5 py-2 hover:text-[#4648d4] transition-all">
+                <span class="material-symbols-outlined" data-icon="history">history</span>
+                <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em]">History</span>
+            </div>
+            <div
+                class="flex flex-col items-center justify-center text-[#1b1b23]/60 dark:text-slate-400 px-5 py-2 hover:text-[#4648d4] transition-all">
+                <span class="material-symbols-outlined" data-icon="menu_book">menu_book</span>
+                <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em]">Library</span>
+            </div>
+            <div
+                class="flex flex-col items-center justify-center text-[#1b1b23]/60 dark:text-slate-400 px-5 py-2 hover:text-[#4648d4] transition-all">
+                <span class="material-symbols-outlined" data-icon="bookmark">bookmark</span>
+                <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em]">Saved</span>
+            </div>
+        </nav>
+    </footer>
+    <!-- Web Footer -->
+    <footer class="hidden md:block py-16 px-24 bg-surface-container-low border-t border-outline-variant/10">
+        <div class="max-w-7xl mx-auto flex justify-between items-start">
+            <div class="space-y-4">
+                <span class="text-xl font-black tracking-[-0.02em] text-[#4648d4]">SAP Error Decoder</span>
+                <p class="text-sm text-on-surface-variant max-w-xs">High-end diagnostic precision for the SAP enterprise
+                    ecosystem. Built for professionals.</p>
+            </div>
+            <div class="grid grid-cols-3 gap-24">
+                <div class="flex flex-col gap-4">
+                    <span class="label-sm font-bold uppercase text-primary">Tool</span>
+                    <a class="text-sm hover:text-primary transition-colors" href="#">Decoder</a>
+                    <a class="text-sm hover:text-primary transition-colors" href="#">Transaction Map</a>
+                    <a class="text-sm hover:text-primary transition-colors" href="#">IDoc Inspector</a>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <span class="label-sm font-bold uppercase text-primary">Resources</span>
+                    <a class="text-sm hover:text-primary transition-colors" href="#">Library</a>
+                    <a class="text-sm hover:text-primary transition-colors" href="#">Documentation</a>
+                    <a class="text-sm hover:text-primary transition-colors" href="#">API</a>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <span class="label-sm font-bold uppercase text-primary">Company</span>
+                    <a class="text-sm hover:text-primary transition-colors" href="#">About</a>
+                    <a class="text-sm hover:text-primary transition-colors" href="#">Security</a>
+                    <a class="text-sm hover:text-primary transition-colors" href="#">v2.4.1</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

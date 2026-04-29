@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>SAP Error Decoder</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#bdbefe",
+                        "tertiary": "#904900",
+                        "tertiary-fixed": "#ffdcc5",
+                        "error-container": "#ffdad6",
+                        "surface-container-low": "#f5f2fe",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface": "#fcf8ff",
+                        "on-secondary-fixed-variant": "#404178",
+                        "on-surface": "#1b1b23",
+                        "on-error-container": "#93000a",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "background": "#fcf8ff",
+                        "tertiary-container": "#b55d00",
+                        "surface-dim": "#dbd8e4",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#575992",
+                        "on-secondary-fixed": "#13144a",
+                        "inverse-primary": "#c0c1ff",
+                        "surface-bright": "#fcf8ff",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#ffb783",
+                        "primary-fixed": "#e1e0ff",
+                        "surface-container": "#efecf8",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e9e6f3",
+                        "on-tertiary-container": "#fffbff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#703700",
+                        "outline": "#767586",
+                        "on-secondary-container": "#494b83",
+                        "on-primary-fixed": "#07006c",
+                        "surface-container-highest": "#e4e1ed",
+                        "surface-tint": "#494bd6",
+                        "secondary-fixed": "#e1e0ff",
+                        "on-primary-container": "#fffbff",
+                        "on-surface-variant": "#464554",
+                        "outline-variant": "#c7c4d7",
+                        "primary": "#4648d4",
+                        "primary-container": "#6063ee",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#303038",
+                        "surface-variant": "#e4e1ed",
+                        "inverse-on-surface": "#f2effb",
+                        "secondary-fixed-dim": "#c0c1ff",
+                        "on-tertiary-fixed": "#301400",
+                        "on-background": "#1b1b23"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .glass-panel {
+            background: rgba(252, 248, 255, 0.8);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+    <style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface font-body selection:bg-primary-fixed">
+    <!-- TopAppBar -->
+    <header class="bg-[#fcf8ff] dark:bg-slate-950 flex justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
+        <div class="flex items-center gap-4">
+            <button
+                class="material-symbols-outlined text-[#4648d4] dark:text-[#6063ee] hover:bg-[#efecf8] dark:hover:bg-slate-800 transition-colors duration-300 p-2 rounded-full">menu</button>
+            <h1 class="text-2xl font-black tracking-[-0.02em] text-[#4648d4] dark:text-[#6063ee]">SAP Error Decoder</h1>
+        </div>
+        <div class="flex items-center gap-6">
+            <nav class="hidden md:flex gap-8">
+                <a class="font-['Inter'] font-bold tracking-tight text-[#4648d4] dark:text-[#6063ee]"
+                    href="#">Decode</a>
+                <a class="font-['Inter'] font-bold tracking-tight text-[#1b1b23] dark:text-slate-400 hover:text-[#4648d4] transition-colors"
+                    href="#">History</a>
+                <a class="font-['Inter'] font-bold tracking-tight text-[#1b1b23] dark:text-slate-400 hover:text-[#4648d4] transition-colors"
+                    href="#">Library</a>
+            </nav>
+            <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container">
+                <img alt="User profile avatar"
+                    data-alt="professional headshot of a system administrator in a clean office setting with soft natural light"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXi-hp1jEe5tJ-cAx20IrBm-UOxIVvxzl6Cuxy96wTpyLffIbotvUcAqRRyWFvAnYjLakAsoMuVzZYe7nEklwASJdJVlWCAMGgrCgeATQOgMqab5v7J25gZ8gGZD7RHflC6k31xLdOS7qusr-73i07xhVQIZeEzhQj_FGDq8Sdj6Rg0kyGsEA-i5nylYwbl61zQv2QDfJnqYe_1bBwVucv5VZjjdEi6QzR6NANJq7W0GpMb9btt9uL5srsotUl-heRaxxQVIdjH0s" />
+            </div>
+        </div>
+    </header>
+    <main class="pt-24 pb-32 px-6 max-w-7xl mx-auto">
+        <!-- Hero Search Section -->
+        <section class="mb-16">
+            <div class="flex flex-col md:flex-row gap-8 items-start">
+                <div class="flex-1 w-full">
+                    <h2 class="text-[3.5rem] font-black tracking-[-0.02em] text-on-surface leading-[1.1] mb-8">
+                        Precision <span class="text-primary">Diagnostics</span><br />for SAP Systems.
+                    </h2>
+                    <div class="relative group">
+                        <textarea
+                            class="w-full h-48 p-8 bg-surface-container-highest rounded-lg text-xl border-none focus:ring-2 focus:ring-primary/10 resize-none transition-all placeholder:text-on-surface-variant/40 font-mono"
+                            placeholder="Paste your SAP error here..."></textarea>
+                        <button
+                            class="absolute bottom-6 right-6 px-8 py-4 bg-gradient-to-br from-primary to-primary-container text-white font-bold rounded-lg shadow-xl hover:shadow-primary/20 transition-all scale-100 active:scale-95 flex items-center gap-2">
+                            <span class="material-symbols-outlined">auto_fix_high</span>
+                            Decode Error
+                        </button>
+                    </div>
+                </div>
+                <div class="hidden lg:block w-72 space-y-4">
+                    <div class="p-6 bg-surface-container-low rounded-lg">
+                        <span
+                            class="label-sm block mb-4 text-[0.6875rem] font-bold uppercase tracking-[0.05em] text-on-surface-variant">Active
+                            Sentinel</span>
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="material-symbols-outlined text-primary text-sm"
+                                style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            <span class="text-sm font-medium">Kernel 7.53 Path</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary text-sm"
+                                style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                            <span class="text-sm font-medium">DB Connection Stable</span>
+                        </div>
+                    </div>
+                    <div class="h-40 rounded-lg overflow-hidden relative">
+                        <img alt="Server visualization" class="object-cover w-full h-full"
+                            data-alt="abstract close-up of high-speed server circuitry with glowing purple neon fiber optic cables"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCevBROYpO0Kqn4J69ReDdVVhkfqPi4pIw1unC013XSB1Y7i8NBL_yFIwU8eCeKxUcw7lvPH3eyockLPTkpPYIx4a9yQBGj-xLMlVWNFsgIu-5rAguiRo5YilImw9oi0lbYSRg2g0P_tRor6Z0QrVckJvTTZp0QkN2i4xOfpfxX3xWH3qjvChh6hJw5C70Sdo1Og52TEklZkDZLvH4m-QVOBHXKNcrwnJaJ8sFyAWUr7HmrNeyDePseNWJg81m7pzjYNTeXIZ0r98A" />
+                        <div class="absolute inset-0 bg-primary/20 mix-blend-overlay"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Results Grid (Asymmetric Layout) -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+            <!-- Left Metadata Sidebar -->
+            <div class="md:col-span-3 space-y-6">
+                <div class="bg-surface-container p-6 rounded-lg">
+                    <h3
+                        class="label-sm text-[0.6875rem] font-bold uppercase tracking-[0.05em] mb-4 text-on-surface-variant">
+                        Metadata</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-[0.6875rem] text-on-surface-variant uppercase tracking-widest font-bold">
+                                Error ID</p>
+                            <p class="font-mono text-sm font-bold text-primary">DBSQL_REDIRECT_INCONSISTENCY</p>
+                        </div>
+                        <div>
+                            <p class="text-[0.6875rem] text-on-surface-variant uppercase tracking-widest font-bold">
+                                Severity</p>
+                            <div
+                                class="inline-flex items-center gap-2 mt-1 px-3 py-1 bg-error-container text-on-error-container rounded-full">
+                                <span class="material-symbols-outlined text-sm"
+                                    style="font-variation-settings: 'FILL' 1;">report</span>
+                                <span class="text-[0.6875rem] font-bold uppercase">Critical</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-[0.6875rem] text-on-surface-variant uppercase tracking-widest font-bold">
+                                Transaction</p>
+                            <p class="font-bold text-sm">SE11 - Dictionary</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Main Content Area -->
+            <div class="md:col-span-9 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- What This Means -->
+                <div
+                    class="md:col-span-2 bg-surface-container-lowest p-10 rounded-lg shadow-[0_4px_32px_rgba(27,27,35,0.02)]">
+                    <div class="flex items-start gap-6">
+                        <div class="w-12 h-12 bg-surface-container flex items-center justify-center rounded-lg">
+                            <span class="material-symbols-outlined text-primary">info</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold tracking-tight mb-4">What This Means</h3>
+                            <p class="text-on-surface-variant leading-relaxed">The system encountered an inconsistency
+                                between the application layer SQL redirect definition and the actual database view
+                                structure. This typically prevents data retrieval from the specified HANA-optimized
+                                tables.</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Why It Happened -->
+                <div class="bg-surface-container-high p-8 rounded-lg">
+                    <div class="flex items-center gap-4 mb-6">
+                        <span class="material-symbols-outlined text-error"
+                            style="font-variation-settings: 'FILL' 1;">dangerous</span>
+                        <h3 class="text-lg font-bold tracking-tight">Why It Happened</h3>
+                    </div>
+                    <ul class="space-y-4">
+                        <li class="flex gap-3 text-sm text-on-surface-variant">
+                            <span class="text-primary font-bold">01.</span>
+                            The DDIC definition was updated during a transport, but the underlying SQL View was not
+                            properly re-generated.
+                        </li>
+                        <li class="flex gap-3 text-sm text-on-surface-variant">
+                            <span class="text-primary font-bold">02.</span>
+                            A mismatch exists in the CDS DDL source code versus the active dictionary object.
+                        </li>
+                    </ul>
+                </div>
+                <!-- How to Fix -->
+                <div class="bg-surface-container-high p-8 rounded-lg">
+                    <div class="flex items-center gap-4 mb-6">
+                        <span class="material-symbols-outlined text-[#2e7d32]"
+                            style="font-variation-settings: 'FILL' 1;">build_circle</span>
+                        <h3 class="text-lg font-bold tracking-tight text-on-surface">How to Fix</h3>
+                    </div>
+                    <div class="space-y-4">
+                        <div
+                            class="p-4 bg-surface-container-lowest rounded-lg font-mono text-xs text-on-primary-fixed-variant">
+                            EXECUTE: RUTDDLS_ACTIVATE_AND_GENERATE
+                        </div>
+                        <p class="text-sm text-on-surface-variant leading-relaxed">
+                            Run the utility report in <span class="bg-primary-fixed px-1 rounded">SE38</span> to
+                            synchronize the redirect view. Ensure all dependent CDS views are also in 'Active' state.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- BottomNavBar -->
+    <nav
+        class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center pb-safe pt-2 bg-[#fcf8ff] dark:bg-slate-950 z-50 rounded-t-2xl shadow-[0_-4px_32px_rgba(27,27,35,0.04)]">
+        <div
+            class="flex flex-col items-center justify-center bg-[#e1e0ff] dark:bg-[#4648d4]/20 text-[#4648d4] rounded-2xl px-5 py-2 transition-all ease-in-out transform duration-300">
+            <span class="material-symbols-outlined">search</span>
+            <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em]">Decode</span>
+        </div>
+        <div
+            class="flex flex-col items-center justify-center text-[#1b1b23]/60 dark:text-slate-400 px-5 py-2 hover:text-[#4648d4] transition-all">
+            <span class="material-symbols-outlined">history</span>
+            <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em]">History</span>
+        </div>
+        <div
+            class="flex flex-col items-center justify-center text-[#1b1b23]/60 dark:text-slate-400 px-5 py-2 hover:text-[#4648d4] transition-all">
+            <span class="material-symbols-outlined">menu_book</span>
+            <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em]">Library</span>
+        </div>
+        <div
+            class="flex flex-col items-center justify-center text-[#1b1b23]/60 dark:text-slate-400 px-5 py-2 hover:text-[#4648d4] transition-all">
+            <span class="material-symbols-outlined">bookmark</span>
+            <span class="font-['Inter'] text-[0.6875rem] font-bold uppercase tracking-[0.05em]">Saved</span>
+        </div>
+    </nav>
+    <!-- Navigation Drawer (Hidden on mobile by default, shown here for structure) -->
+    <div
+        class="hidden lg:fixed left-0 top-0 h-full w-20 flex flex-col items-center py-24 gap-8 bg-[#fcf8ff] z-40 border-r border-surface-container">
+        <span
+            class="material-symbols-outlined text-[#4648d4] hover:bg-[#efecf8] p-3 rounded-xl transition-all cursor-pointer">clinical_notes</span>
+        <span
+            class="material-symbols-outlined text-on-surface-variant hover:bg-[#efecf8] p-3 rounded-xl transition-all cursor-pointer">terminal</span>
+        <span
+            class="material-symbols-outlined text-on-surface-variant hover:bg-[#efecf8] p-3 rounded-xl transition-all cursor-pointer">sync</span>
+        <div class="mt-auto flex flex-col gap-8">
+            <span
+                class="material-symbols-outlined text-on-surface-variant hover:bg-[#efecf8] p-3 rounded-xl transition-all cursor-pointer">settings</span>
+            <span
+                class="material-symbols-outlined text-on-surface-variant hover:bg-[#efecf8] p-3 rounded-xl transition-all cursor-pointer">help</span>
+        </div>
+    </div>
+</body>
+
+</html>
