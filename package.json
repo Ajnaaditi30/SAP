@@ -3,8 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npm --prefix client start",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "npm --prefix server start",
     "client": "npm --prefix client start",
-    "build": "npm --prefix client run build"
+    "build": "npm --prefix client run build",
+    "rag:generate": "node scripts/generate_knowledge_base.js",
+    "rag:build": "node scripts/build_embeddings.js"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1",
+    "faiss-node": "^0.5.1"
   }
 }

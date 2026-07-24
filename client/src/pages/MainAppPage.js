@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import ErrorOutputFormatter from "../components/ErrorOutputFormatter";
 import HistoryPanel from "../components/HistoryPanel";
+import { decodeService } from "../utils/decodeService";
 import { historyService } from "../utils/historyService";
 
 const DEFAULT_RESULT = `Meaning:
@@ -49,7 +50,7 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
     const trimmedError = errorInput.trim();
 
     if (!trimmedError) {
-      setErrorMessage("Please enter an SAP error before decoding.");
+      setErrorMessage("Please enter an error");
       setResult(DEFAULT_RESULT);
       return;
     }
@@ -62,19 +63,7 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
     setSaveSuccess(false);
 
     try {
-      const response = await fetch("/api/decode", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ error: trimmedError })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Decode request failed with status ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await decodeService.decodeWithFallback(trimmedError);
       const decodedResult = data.result || "Unable to confidently decode this error.";
 
       setResult(decodedResult);
