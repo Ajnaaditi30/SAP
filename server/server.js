@@ -1,11 +1,17 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const path = require("path");
 const { GoogleGenAI } = require("@google/genai");
 const crypto = require("crypto");
 const { decodeWithRag, emptyResponse } = require("./rag/service");
+const { getFollowUpAssistantReply } = require("./followupAssistant");
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, ".env") });
+console.log("[server] dotenv loaded from", path.resolve(__dirname, ".env"));
+console.log("[server] cwd:", process.cwd());
+console.log("[server] GROQ_API_KEY configured:", Boolean(process.env.GROQ_API_KEY));
+console.log("[server] GROQ_MODEL configured:", process.env.GROQ_MODEL || "unset");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,6 +20,7 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
 
 // In-memory cache for decoded errors
 const responseCache = new Map();
+const followUpSessions = new Map();
 
 // Sensitive keywords that indicate PII/sensitive data
 const SENSITIVE_KEYWORDS = [
@@ -232,6 +239,7 @@ app.post("/decode", async (req, res) => {
     }
 
     console.log("[decode] Incoming query", { query: error });
+    followUpSessions.clear();
 
     // Use the same local FAISS-backed retrieval flow as the deployed API.
     // The existing implementation remains below for backwards compatibility.
@@ -352,6 +360,25 @@ Error: ${maskedError}`;
   } catch (errorDetails) {
     console.error("[decode] Route failed:", errorDetails.stack || errorDetails);
     return res.status(500).json(emptyResponse("Unable to decode error. Please try again."));
+  }
+});
+
+app.post("/api/followup", async (req, res) => {
+  try {
+    const question = typeof req.body?.question === "string" ? req.body.question.trim() : "";
+
+    if (!question) {
+      return res.status(400).json({ answer: "Please enter a follow-up question." });
+    }
+
+    const answer = await getFollowUpAssistantReply(question);
+    return res.json({ answer });
+  } catch (errorDetails) {
+    console.error("[followup] Route failed:", errorDetails.stack || errorDetails);
+    if (errorDetails?.message) {
+      console.error("[followup] Error message:", errorDetails.message);
+    }
+    return res.status(500).json({ answer: "I could not generate a follow-up answer right now." });
   }
 });
 

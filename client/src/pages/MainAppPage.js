@@ -37,6 +37,13 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [historyVersion, setHistoryVersion] = useState(0);
+  const [decodedData, setDecodedData] = useState(null);
+  const [relatedErrors, setRelatedErrors] = useState([]);
+  const [confidenceDetails, setConfidenceDetails] = useState(null);
+  const [followUpQuestion, setFollowUpQuestion] = useState("");
+  const [followUpConversation, setFollowUpConversation] = useState([]);
+  const [followUpLoading, setFollowUpLoading] = useState(false);
+  const [followUpError, setFollowUpError] = useState("");
 
   useEffect(() => {
     if (location.state?.prefillError) {
@@ -61,6 +68,10 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
     setHasSensitiveData(false);
     setFromCache(false);
     setSaveSuccess(false);
+    setRelatedErrors([]);
+    setConfidenceDetails(null);
+    setFollowUpConversation([]);
+    setFollowUpError("");
 
     try {
       const data = await decodeService.decodeWithFallback(trimmedError);
@@ -70,6 +81,9 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
       setConfidence(data.confidence || "Low");
       setHasSensitiveData(Boolean(data.hasSensitiveData));
       setFromCache(Boolean(data.fromCache));
+      setDecodedData(data);
+      setRelatedErrors(Array.isArray(data.relatedErrors) ? data.relatedErrors : []);
+      setConfidenceDetails(data.confidenceDetails || null);
 
       if (!doNotSave) {
         historyService.addToHistory(trimmedError, decodedResult);
@@ -121,6 +135,50 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
     setErrorInput(item.error);
     setResult(item.result || DEFAULT_RESULT);
     setErrorMessage("");
+    setDecodedData(null);
+    setRelatedErrors([]);
+    setConfidenceDetails(null);
+    setFollowUpConversation([]);
+    setFollowUpError("");
+  };
+
+  const handleFollowUpSubmit = async () => {
+    const trimmedQuestion = followUpQuestion.trim();
+
+    if (!trimmedQuestion || !decodedData) {
+      setFollowUpError("Ask a follow-up question after decoding an SAP error.");
+      return;
+    }
+
+    setFollowUpLoading(true);
+    setFollowUpError("");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/followup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: trimmedQuestion })
+      });
+      const payload = await response.json();
+
+      setFollowUpConversation((current) => [
+        ...current,
+        { role: "user", text: trimmedQuestion },
+        { role: "assistant", text: payload.answer || "The retrieved SAP knowledge base does not contain enough information to answer this question." }
+      ]);
+      setFollowUpQuestion("");
+    } catch (error) {
+      console.error("Follow-up failed:", error);
+      setFollowUpError("Unable to answer the follow-up question right now.");
+    } finally {
+      setFollowUpLoading(false);
+    }
+  };
+
+  const handleClearFollowUp = () => {
+    setFollowUpConversation([]);
+    setFollowUpQuestion("");
+    setFollowUpError("");
   };
 
   const errorId = errorInput.trim().split(/\s+/)[0] || "Awaiting input";
@@ -427,7 +485,129 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
               <h3 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
                 Decoded Result
               </h3>
-              <ErrorOutputFormatter result={result} />
+              <ErrorOutputFormatter result={result} decodedData={decodedData} />
+
+              {confidenceDetails && (
+                <div className="mt-6 rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
+                  <h4 className="mb-3 text-sm font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
+                    Confidence
+                  </h4>
+                  <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+                    {confidenceDetails.percent}%
+                  </div>
+                  <div className="mt-3 text-sm font-semibold text-gray-900 dark:text-white">
+                    Reason
+                  </div>
+                  <ul className="mt-2 space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                    {confidenceDetails.reasons.map((reason, index) => (
+                      <li key={`${reason.label}-${index}`} className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-green-600 dark:text-green-400">
+                          {reason.passed ? "check_circle" : "radio_button_unchecked"}
+                        </span>
+                        <span>{reason.label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  {confidenceDetails.low_confidence_message && (
+                    <p className="mt-3 text-sm font-medium text-orange-700 dark:text-orange-300">
+                      {confidenceDetails.low_confidence_message}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {relatedErrors.length > 0 && (
+                <div className="mt-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+                  <h4 className="mb-4 text-lg font-semibold text-gray-900 dark:text-white">
+                    Related SAP Errors
+                  </h4>
+                  <div className="space-y-3">
+                    {relatedErrors.map((item) => (
+                      <div key={item.id || item.error_code} className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3 dark:border-gray-700 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <div className="font-semibold text-gray-900 dark:text-white">{item.error_code || item.id}</div>
+                          <div className="text-sm text-gray-700 dark:text-gray-300">{item.title}</div>
+                          <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Module: {item.module || "N/A"}</div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="text-sm font-medium text-blue-600 dark:text-blue-400">Similarity: {item.similarity_percent}%</div>
+                          <button
+                            type="button"
+                            className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                            onClick={() => {
+                              setErrorInput(item.error_code || item.title || "");
+                              setResult(DEFAULT_RESULT);
+                              setLoading(true);
+                              decodeService.decodeWithFallback(item.error_code || item.title || "").then((data) => {
+                                const decoded = data.result || "Unable to confidently decode this error.";
+                                setResult(decoded);
+                                setConfidence(data.confidence || "Low");
+                                setHasSensitiveData(Boolean(data.hasSensitiveData));
+                                setFromCache(Boolean(data.fromCache));
+                                setDecodedData(data.decodedData || null);
+                                setRelatedErrors(Array.isArray(data.relatedErrors) ? data.relatedErrors : []);
+                                setConfidenceDetails(data.confidenceDetails || null);
+                                setFollowUpConversation([]);
+                                setFollowUpError("");
+                                setLoading(false);
+                              }).catch(() => {
+                                setLoading(false);
+                              });
+                            }}
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {decodedData && (
+                <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/30">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Follow-up Assistant</h4>
+                    <button type="button" onClick={handleClearFollowUp} className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                      Clear Conversation
+                    </button>
+                  </div>
+
+                  <div className="mb-3 space-y-2">
+                    {followUpConversation.length === 0 && (
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Ask a question about this SAP error using the retrieved knowledge base.</p>
+                    )}
+                    {followUpConversation.map((entry, index) => (
+                      <div key={`${entry.role}-${index}`} className={`rounded-lg p-3 ${entry.role === "user" ? "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-200" : "bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200"}`}>
+                        <div className="text-xs font-semibold uppercase tracking-wide opacity-70">{entry.role === "user" ? "You" : "Assistant"}</div>
+                        <div className="mt-1 text-sm">{entry.text}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col gap-2 md:flex-row">
+                    <input
+                      type="text"
+                      value={followUpQuestion}
+                      onChange={(event) => setFollowUpQuestion(event.target.value)}
+                      placeholder="Ask a follow-up question..."
+                      className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleFollowUpSubmit}
+                      disabled={followUpLoading}
+                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {followUpLoading ? "Asking..." : "Ask"}
+                    </button>
+                  </div>
+
+                  {followUpError && (
+                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">{followUpError}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

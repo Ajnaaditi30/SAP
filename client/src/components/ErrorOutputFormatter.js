@@ -109,7 +109,7 @@ const renderLine = (line) => {
     return (
       <div key={line} className="flex gap-3">
         <span className="mt-0.5 font-semibold text-blue-600 dark:text-blue-400">
-          {line.match(/^\d+/)?.[0]}.
+          {line.match(/^\d+/)?.[0]}. 
         </span>
         <p>{stripNumber(line)}</p>
       </div>
