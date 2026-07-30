@@ -1,0 +1,23 @@
+[33mcommit 251c594e90253df63a4ee631cd3f266cb7a5b1e9[m
+Author: Aaditi Ajnadkar <aaditi.ajnadkar@gmail.com>
+Date:   Sat Jul 25 09:59:56 2026 +0530
+
+    fix: clear GROQ_API_KEY in .env.example files for security
+
+[33mcommit ee3000feb69afdc045bc4da78745e4db89e74ee1[m
+Author: Aaditi Ajnadkar <aaditi.ajnadkar@gmail.com>
+Date:   Sat Jul 25 01:13:28 2026 +0530
+
+    fix: update GROQ_API_KEY in .env.example files
+
+[33mcommit 8566c323d0f7a87109f5daa2974ee366498e3b23[m
+Author: Aaditi Ajnadkar <aaditi.ajnadkar@gmail.com>
+Date:   Sat Jul 25 01:10:31 2026 +0530
+
+    fix: update GROQ_API_KEY in environment files to placeholder
+
+[33mcommit 8e5059cd5ae04fbacca67db10370e45ad9e95fe5[m
+Author: Aaditi Ajnadkar <aaditi.ajnadkar@gmail.com>
+Date:   Sat Jul 25 00:57:30 2026 +0530
+
+    Complete SAP ERP RAG Error Decoder with AI enhancements
