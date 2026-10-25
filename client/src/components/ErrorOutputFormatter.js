@@ -15,8 +15,23 @@ const SECTION_TITLES = [
   "Source",
   "Confidence"
 ];
+const STRUCTURED_SECTION_TITLES = [
+  "Error Summary",
+  "Possible Causes",
+  "Numbered Troubleshooting Steps",
+  "Verification",
+  "Next Step",
+  "Related Transactions",
+  "Keywords",
+  "Time to Fix",
+  "Who Can Fix",
+  "Risk Level",
+  "Source",
+  "Confidence"
+];
 
 const SECTION_ALIASES = {
+  "error summary": "Error Summary",
   title: "Title",
   meaning: "Meaning",
   business: "Business Context",
@@ -27,6 +42,9 @@ const SECTION_ALIASES = {
   diagnostic: "Diagnostic Steps",
   diagnostics: "Diagnostic Steps",
   "diagnostic steps": "Diagnostic Steps",
+  "numbered troubleshooting steps": "Numbered Troubleshooting Steps",
+  verification: "Verification",
+  "next step": "Next Step",
   recommendation: "Recommended Actions",
   recommendations: "Recommended Actions",
   "recommended actions": "Recommended Actions",
@@ -47,6 +65,10 @@ const SECTION_ALIASES = {
 };
 
 const SECTION_ICONS = {
+  "Error Summary": "info",
+  Verification: "fact_check",
+  "Next Step": "arrow_forward",
+  "Numbered Troubleshooting Steps": "construction",
   Title: "title",
   Meaning: "info",
   "Business Context": "business",
@@ -83,7 +105,7 @@ const parseSections = (text) => {
   }
 
   const sections = [];
-  const headerPattern = /(?:^|\n)\s*(?:[*#\-\d.)\s]*|[^\w\s])*\s*(Title|Meaning|Business Context|Possible Causes|Diagnostic Steps|Recommended Actions|Related Transactions|Keywords|Time to Fix|Who Can Fix|Risk Level|Source|Confidence)\s*:\s*/gi;
+  const headerPattern = /(?:^|\n)\s*(?:[*#\-\d.)\s]*|[^\w\s])*\s*(Error Summary|Numbered Troubleshooting Steps|Verification|Next Step|Title|Meaning|Business Context|Possible Causes|Diagnostic Steps|Recommended Actions|Related Transactions|Keywords|Time to Fix|Who Can Fix|Risk Level|Source|Confidence)\s*:\s*/gi;
   const matches = [...source.matchAll(headerPattern)];
 
   if (!matches.length) {
@@ -99,7 +121,8 @@ const parseSections = (text) => {
     sections.push({ title, content });
   });
 
-  return SECTION_TITLES.map((title) => (
+  const displayTitles = /^Error Summary\s*:/i.test(source) ? STRUCTURED_SECTION_TITLES : SECTION_TITLES;
+  return displayTitles.map((title) => (
     sections.find((section) => section.title === title) || { title, content: "Not provided." }
   ));
 };

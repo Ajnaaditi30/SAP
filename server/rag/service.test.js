@@ -59,7 +59,7 @@ test('documentResponse preserves all returned document fields', () => {
   assert.equal(response.risk_level, 'Medium');
 });
 
-test('constrainToSources merges generated values without dropping retrieved fields', () => {
+test('constrainToSources only returns SAP guidance from the selected retrieved document', () => {
   const primaryDocument = {
     id: 'sap-mm-004',
     error_code: 'MM_NUMBER_RANGE_EXHAUSTED',
@@ -91,17 +91,17 @@ test('constrainToSources merges generated values without dropping retrieved fiel
     confidence: 0.9
   }, [{ document: primaryDocument, score: 0.91 }], 0.91);
 
-  assert.equal(merged.title, 'Generated title');
-  assert.equal(merged.description, 'Generated description');
-  assert.equal(merged.business_context, 'Generated context');
-  assert.deepEqual(merged.possible_causes, ['Generated cause']);
-  assert.deepEqual(merged.diagnostic_steps, ['Generated step']);
-  assert.deepEqual(merged.recommended_actions, ['Generated action']);
-  assert.deepEqual(merged.related_transactions, ['Generated transaction']);
-  assert.deepEqual(merged.keywords, ['Generated keyword']);
-  assert.equal(merged.source, 'generated-source');
-  assert.equal(merged.time_to_fix, '10 minutes');
+  assert.equal(merged.title, primaryDocument.title);
+  assert.equal(merged.description, primaryDocument.description);
+  assert.equal(merged.business_context, primaryDocument.business_context);
+  assert.deepEqual(merged.possible_causes, primaryDocument.possible_causes);
+  assert.deepEqual(merged.diagnostic_steps, primaryDocument.diagnostic_steps);
+  assert.deepEqual(merged.recommended_actions, primaryDocument.recommended_actions);
+  assert.deepEqual(merged.related_transactions, primaryDocument.related_transactions);
+  assert.deepEqual(merged.keywords, primaryDocument.keywords);
+  assert.equal(merged.source, primaryDocument.source);
+  assert.equal(merged.time_to_fix, '15-60 minutes');
   assert.equal(merged.who_can_fix, 'SAP MM Functional Consultant');
-  assert.equal(merged.risk_level, 'High');
+  assert.equal(merged.risk_level, 'Medium');
   assert.equal(merged.confidence, 0.95);
 });

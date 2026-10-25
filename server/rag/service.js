@@ -36,16 +36,6 @@ function derivedMetadata(document = {}) {
   };
 }
 
-function chooseText(value, fallback = "") {
-  if (typeof value === "string") return value.trim() ? value : fallback;
-  return value ?? fallback;
-}
-
-function chooseArray(value, fallback = []) {
-  if (Array.isArray(value) && value.length) return stringArray(value);
-  return stringArray(fallback);
-}
-
 function scoreToPercent(score) {
   const normalized = Number(score);
   if (!Number.isFinite(normalized)) return 0;
@@ -111,10 +101,6 @@ function documentResponse(result) {
     meaning: doc.description || "",
     sources: [doc.source].filter(Boolean)
   };
-}
-
-function stringArray(value) {
-  return Array.isArray(value) ? value.filter((item) => item != null).map(String) : [];
 }
 
 function isValidResponse(value) {
@@ -249,53 +235,43 @@ function buildFollowUpAnswer(question = "", context = {}, conversation = []) {
   };
 }
 
-async function callOpenAI(prompt) {
-  if (!process.env.OPENAI_API_KEY) {
-    console.log("[rag:service] LLM call skipped: OPENAI_API_KEY is not configured.");
+async function callGroq(prompt) {
+  if (!process.env.GROQ_API_KEY) {
+    console.log("[rag:service] LLM call skipped: GROQ_API_KEY is not configured.");
     return null;
   }
-  console.log("[rag:service] Prompt sent to the LLM", prompt);
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: process.env.OPENAI_MODEL || "gpt-4o-mini", temperature: 0, response_format: { type: "json_object" }, messages: [{ role: "user", content: prompt }] })
+    headers: {
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
+      temperature: 0,
+      max_completion_tokens: 1000,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: "Format only the supplied retrieved SAP documentation. Never add SAP guidance." },
+        { role: "user", content: prompt }
+      ]
+    })
   });
-  if (!response.ok) throw new Error(`OpenAI request failed (${response.status}).`);
+  if (!response.ok) throw new Error(`Groq request failed (${response.status} ${response.statusText}).`);
   const data = await response.json();
   const answer = JSON.parse(data.choices?.[0]?.message?.content || "{}");
-  console.log("[rag:service] LLM JSON response", JSON.stringify(answer));
   return answer;
 }
 
 function constrainToSources(answer, retrieved, score) {
-  const primary = retrieved[0]?.document || {};
-  const metadata = derivedMetadata(primary);
   const answerObject = answer || {};
-  const description = chooseText(answerObject.description || answerObject.meaning, primary.description || "");
-  const response = {
-    id: chooseText(answerObject.id, primary.id || ""),
-    error_code: chooseText(answerObject.error_code, primary.error_code || ""),
-    module: chooseText(answerObject.module, primary.module || ""),
-    title: chooseText(answerObject.title, primary.title || ""),
-    description,
-    business_context: chooseText(answerObject.business_context, primary.business_context || ""),
-    possible_causes: chooseArray(answerObject.possible_causes, primary.possible_causes),
-    diagnostic_steps: chooseArray(answerObject.diagnostic_steps, primary.diagnostic_steps),
-    recommended_actions: chooseArray(answerObject.recommended_actions, primary.recommended_actions),
-    related_transactions: chooseArray(answerObject.related_transactions, primary.related_transactions),
-    keywords: chooseArray(answerObject.keywords, primary.keywords),
-    source: chooseText(answerObject.source, primary.source || ""),
-    time_to_fix: chooseText(answerObject.time_to_fix, metadata.time_to_fix),
-    who_can_fix: chooseText(answerObject.who_can_fix, metadata.who_can_fix),
-    risk_level: chooseText(answerObject.risk_level, metadata.risk_level),
-    confidence: confidenceFromScore(score),
-    confidence_score: scoreToPercent(score),
-    confidence_details: buildConfidenceDetails(primary, score, ""),
-    related_errors: buildRelatedErrors(retrieved, primary),
-    meaning: description,
-    sources: [...new Set(retrieved.map((item) => item.document.source).filter(Boolean))]
-  };
-
+  const selected = retrieved.find(({ document }) => (
+    (answerObject.id && answerObject.id === document.id) ||
+    (answerObject.error_code && answerObject.error_code === document.error_code)
+  )) || retrieved[0];
+  const response = documentResponse({ document: selected.document, score: selected.score ?? score });
+  response.related_errors = buildRelatedErrors(retrieved, selected.document);
+  response.sources = [...new Set(retrieved.map((item) => item.document.source).filter(Boolean))];
   return response;
 }
 
@@ -323,9 +299,8 @@ async function decodeWithRag(query) {
     risk_level: deterministic.risk_level
   }));
   const prompt = buildPrompt(query, retrieved);
-  console.log("[rag:service] Prompt prepared", prompt);
   try {
-    const generated = await callOpenAI(prompt);
+    const generated = await callGroq(prompt);
     const response = isValidResponse(generated) ? constrainToSources(generated, retrieved, retrieved[0].score) : deterministic;
     response.related_errors = buildRelatedErrors(retrieved, response);
     response.confidence_details = buildConfidenceDetails(response, response.confidence || retrieved[0].score, query);

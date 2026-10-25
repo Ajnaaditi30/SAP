@@ -23,6 +23,84 @@ Basis / Functional / ABAP team, depending on the error.
 Risk Level:
 Unknown until analyzed.`;
 
+function renderInlineMarkdown(text, keyPrefix) {
+  return text.split(/(\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\*[^*]+\*)/g).map((part, index) => {
+    const key = `${keyPrefix}-${index}`;
+    if (/^(\*\*|__)/.test(part)) return <strong key={key}>{part.slice(2, -2)}</strong>;
+    if (/^\*/.test(part)) return <em key={key}>{part.slice(1, -1)}</em>;
+    if (/^`/.test(part)) return <code key={key} className="rounded bg-gray-100 px-1 dark:bg-gray-700">{part.slice(1, -1)}</code>;
+    return part;
+  });
+}
+
+function FollowUpMarkdown({ text }) {
+  const lines = String(text || "").split(/\r?\n/);
+  const blocks = [];
+  let paragraph = [];
+  let list = [];
+  let listType = "";
+
+  const flushParagraph = () => {
+    if (paragraph.length) {
+      blocks.push({ type: "p", lines: paragraph });
+      paragraph = [];
+    }
+  };
+  const flushList = () => {
+    if (list.length) {
+      blocks.push({ type: listType, lines: list });
+      list = [];
+      listType = "";
+    }
+  };
+
+  lines.forEach((line) => {
+    const value = line.trim();
+    const heading = value.match(/^#{1,3}\s+(.+)|^([A-Z][^:\n]{2,50}):$/);
+    const ordered = value.match(/^\d+[.)]\s+(.+)/);
+    const unordered = value.match(/^[-*]\s+(.+)/);
+
+    if (!value) {
+      flushParagraph();
+      flushList();
+    } else if (heading) {
+      flushParagraph();
+      flushList();
+      blocks.push({ type: "h", lines: [heading[1] || heading[2]] });
+    } else if (ordered || unordered) {
+      flushParagraph();
+      const type = ordered ? "ol" : "ul";
+      if (listType && listType !== type) flushList();
+      listType = type;
+      list.push((ordered || unordered)[1]);
+    } else {
+      flushList();
+      paragraph.push(value);
+    }
+  });
+  flushParagraph();
+  flushList();
+
+  return (
+    <div className="mt-1 space-y-2 text-sm">
+      {blocks.map((block, index) => {
+        if (block.type === "h") {
+          return <h5 key={index} className="font-semibold">{renderInlineMarkdown(block.lines[0], `h-${index}`)}</h5>;
+        }
+        if (block.type === "ol" || block.type === "ul") {
+          const List = block.type;
+          return (
+            <List key={index} className={`${block.type === "ol" ? "list-decimal" : "list-disc"} space-y-1 pl-5`}>
+              {block.lines.map((item, itemIndex) => <li key={itemIndex}>{renderInlineMarkdown(item, `l-${index}-${itemIndex}`)}</li>)}
+            </List>
+          );
+        }
+        return <p key={index}>{renderInlineMarkdown(block.lines.join(" "), `p-${index}`)}</p>;
+      })}
+    </div>
+  );
+}
+
 function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
   const location = useLocation();
   const [errorInput, setErrorInput] = useState("");
@@ -157,7 +235,11 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
       const response = await fetch("http://localhost:5000/api/followup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: trimmedQuestion })
+        body: JSON.stringify({
+          question: trimmedQuestion,
+          context: decodedData?.context || {},
+          history: followUpConversation.slice(-8)
+        })
       });
       const payload = await response.json();
 
@@ -580,7 +662,9 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
                     {followUpConversation.map((entry, index) => (
                       <div key={`${entry.role}-${index}`} className={`rounded-lg p-3 ${entry.role === "user" ? "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-200" : "bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200"}`}>
                         <div className="text-xs font-semibold uppercase tracking-wide opacity-70">{entry.role === "user" ? "You" : "Assistant"}</div>
-                        <div className="mt-1 text-sm">{entry.text}</div>
+                        {entry.role === "assistant"
+                          ? <FollowUpMarkdown text={entry.text} />
+                          : <div className="mt-1 text-sm">{entry.text}</div>}
                       </div>
                     ))}
                   </div>

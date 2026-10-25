@@ -42,7 +42,7 @@ const formatRagResponse = (data) => {
 
   const description = data.description || data.meaning || "Not available.";
   const title = data.title || "Not available.";
-  const businessContext = data.business_context || "Not available.";
+  const businessContext = data.business_context || "";
   const possibleCauses = data.possible_causes || [];
   const diagnosticSteps = data.diagnostic_steps || [];
   const recommendedActions = data.recommended_actions || [];
@@ -54,11 +54,16 @@ const formatRagResponse = (data) => {
   const riskLevel = data.risk_level || "Not provided.";
   const confidence = confidenceLabel(Number(data.confidence));
 
+  const troubleshootingSteps = [...diagnosticSteps, ...recommendedActions];
+  const verification = diagnosticSteps.find((step) => /\b(verify|confirm|check|test|ensure)\b/i.test(step));
+  const nextStep = recommendedActions[0] || diagnosticSteps[0] || "Not specified in retrieved documentation.";
+
   return {
-    result: `Title:\n${title}\n\nMeaning:\n${description}\n\nBusiness Context:\n${businessContext}\n\nPossible Causes:\n${bulletedList(possibleCauses)}\n\nDiagnostic Steps:\n${numberedList(diagnosticSteps)}\n\nRecommended Actions:\n${bulletedList(recommendedActions)}\n\nRelated Transactions:\n${listText(relatedTransactions)}\n\nKeywords:\n${listText(keywords)}\n\nTime to Fix:\n${timeToFix}\n\nWho Can Fix:\n${whoCanFix}\n\nRisk Level:\n${riskLevel}\n\nSource:\n${source}\n\nConfidence:\n${confidence}`,
+    result: `Error Summary:\n${title}\n${description}${businessContext ? `\n${businessContext}` : ""}\n\nPossible Causes:\n${bulletedList(possibleCauses)}\n\nNumbered Troubleshooting Steps:\n${numberedList(troubleshootingSteps)}\n\nVerification:\n${verification || "Not specified in retrieved documentation."}\n\nNext Step:\n${nextStep}\n\nRelated Transactions:\n${listText(relatedTransactions)}\n\nKeywords:\n${listText(keywords)}\n\nTime to Fix:\n${timeToFix}\n\nWho Can Fix:\n${whoCanFix}\n\nRisk Level:\n${riskLevel}\n\nSource:\n${source}\n\nConfidence:\n${confidence}`,
     confidence,
     hasSensitiveData: false,
-    fromCache: false
+    fromCache: false,
+    context: data
   };
 };
 
