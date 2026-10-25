@@ -1,6 +1,7 @@
 const fs = require("fs/promises");
 const path = require("path");
 const { EMBEDDING_DIMENSION, documentToText, tokenize } = require("./embedder");
+const { logError } = require("../logging");
 
 const INDEX_FILE = path.resolve(__dirname, "..", "..", "embeddings", "sap_errors.faiss");
 const METADATA_FILE = path.resolve(__dirname, "..", "..", "embeddings", "sap_errors.metadata.json");
@@ -22,34 +23,43 @@ function cosineSimilarity(left, right) {
 }
 
 async function loadVectorStore() {
-  const [{ default: faiss }, metadataText, knowledgeBaseText] = await Promise.all([
-    import("faiss-node"), fs.readFile(METADATA_FILE, "utf8"), fs.readFile(KNOWLEDGE_BASE_FILE, "utf8")
-  ]);
-  let metadata = JSON.parse(metadataText);
-  const documents = JSON.parse(knowledgeBaseText);
-  let index;
+  console.info("[rag:vectorStore] stage=load status=started");
+  try {
+    const [{ default: faiss }, metadataText, knowledgeBaseText] = await Promise.all([
+      import("faiss-node"), fs.readFile(METADATA_FILE, "utf8"), fs.readFile(KNOWLEDGE_BASE_FILE, "utf8")
+    ]);
+    let metadata = JSON.parse(metadataText);
+    const documents = JSON.parse(knowledgeBaseText);
+    let index;
 
-  if (JSON.stringify(metadata.documents) !== JSON.stringify(documents)) {
-    console.log("[rag:vectorStore] Knowledge base changed; rebuilding FAISS index", { previousDocumentCount: metadata.documents.length, documentCount: documents.length });
-    index = new faiss.IndexFlatIP(EMBEDDING_DIMENSION);
-    for (const document of documents) index.add(embed(documentToText(document)));
-    metadata = { version: 1, dimension: EMBEDDING_DIMENSION, createdAt: new Date().toISOString(), documents };
-    await fs.mkdir(path.dirname(INDEX_FILE), { recursive: true });
-    index.write(INDEX_FILE);
-    await fs.writeFile(METADATA_FILE, JSON.stringify(metadata, null, 2));
-  } else {
-    index = faiss.IndexFlatIP.read(INDEX_FILE);
+    if (JSON.stringify(metadata.documents) !== JSON.stringify(documents)) {
+      console.info("[rag:vectorStore] Knowledge base changed; rebuilding FAISS index", { previousDocumentCount: metadata.documents.length, documentCount: documents.length });
+      index = new faiss.IndexFlatIP(EMBEDDING_DIMENSION);
+      for (const document of documents) index.add(embed(documentToText(document)));
+      metadata = { version: 1, dimension: EMBEDDING_DIMENSION, createdAt: new Date().toISOString(), documents };
+      await fs.mkdir(path.dirname(INDEX_FILE), { recursive: true });
+      index.write(INDEX_FILE);
+      await fs.writeFile(METADATA_FILE, JSON.stringify(metadata, null, 2));
+    } else {
+      index = faiss.IndexFlatIP.read(INDEX_FILE);
+    }
+
+    if (metadata.dimension !== EMBEDDING_DIMENSION) throw new Error("Embedding index dimension does not match the configured embedder.");
+    console.info("[rag:vectorStore] stage=load status=completed", { documentCount: metadata.documents.length });
+    return { index, metadata };
+  } catch (error) {
+    logError("rag:vector-store-load", error);
+    throw error;
   }
-
-  if (metadata.dimension !== EMBEDDING_DIMENSION) throw new Error("Embedding index dimension does not match the configured embedder.");
-  return { index, metadata };
 }
 
 async function search(queryVector, limit = 5, query = "") {
+  console.info("[rag:vectorStore] stage=search status=started", { queryLength: query.length });
   const { index, metadata } = await loadVectorStore();
   // FAISS provides the candidate set; lexical overlap then makes error-code
   // queries (for example RFC_ERROR_COMMUNICATION) robust to short inputs.
   const result = index.search(queryVector, metadata.documents.length);
+  console.info("[rag:vectorStore] FAISS search completed", { candidateCount: result.labels.length });
   const queryTokens = new Set(tokenize(query).filter((token) => token.length > 2 && !STOP_WORDS.has(token)));
   const inferredModule = inferModule(query);
   const ranked = result.labels
@@ -77,12 +87,13 @@ async function search(queryVector, limit = 5, query = "") {
     .sort((left, right) => right.score - left.score)
     .slice(0, limit);
 
-  console.log("[rag:vectorStore] Top 5 vector candidates and final ranking", {
-    query,
-    queryTokens: [...queryTokens],
+  console.info("[rag:vectorStore] Search ranking completed", {
+    queryLength: query.length,
+    queryTokenCount: queryTokens.size,
     inferredModule: inferredModule || null,
-    topFive: ranked.slice(0, 5).map((item) => ({ id: item.document.id, errorCode: item.document.error_code, vectorScore: Number(item.vectorScore.toFixed(4)), combinedScore: Number(item.score.toFixed(4)) })),
-    finalRanking: ranked.map((item, index) => ({ rank: index + 1, id: item.document.id, errorCode: item.document.error_code, vectorScore: Number(item.vectorScore.toFixed(4)), combinedScore: Number(item.score.toFixed(4)) }))
+    candidates: ranked.length,
+    topMatch: ranked[0]?.document.id || null,
+    topScore: ranked[0] ? Number(ranked[0].score.toFixed(4)) : null
   });
   return ranked;
 }

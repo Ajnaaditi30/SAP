@@ -7,13 +7,11 @@ const { decodeWithRag, emptyResponse } = require("./rag/service");
 const { getFollowUpAssistantReply } = require("./followupAssistant");
 
 dotenv.config({ path: path.resolve(__dirname, ".env") });
-console.log("[server] dotenv loaded from", path.resolve(__dirname, ".env"));
-console.log("[server] cwd:", process.cwd());
 console.log("[server] GROQ_API_KEY configured:", Boolean(process.env.GROQ_API_KEY));
-console.log("[server] GROQ_MODEL configured:", process.env.GROQ_MODEL || "unset");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const { logError } = require("./logging");
 // In-memory cache for decoded errors
 const responseCache = new Map();
 const followUpSessions = new Map();
@@ -223,23 +221,30 @@ function decodeKnownSapError(error) {
 app.use(cors());
 app.use(express.json());
 
+app.get("/api/health", (_req, res) => {
+  return res.status(200).json({ status: "ok" });
+});
+
 app.post("/decode", async (req, res) => {
   try {
-    // Request/RAG diagnostics are logged once below with a consistent prefix.
-
     const error = typeof req.body?.error === "string" ? req.body.error.trim() : "";
     if (!error) {
+      console.warn("[decode] stage=request-validation status=failed reason=missing-error");
       return res.status(400).json(emptyResponse("Please enter an error."));
     }
 
-    console.log("[decode] Incoming query", { query: error });
+    console.info("[decode] stage=request-validation status=passed", { characterCount: error.length });
     followUpSessions.clear();
 
+    console.info("[decode] stage=rag-pipeline status=started");
     const ragResponse = await decodeWithRag(error);
-    console.log("[decode] Final API JSON returned", JSON.stringify(ragResponse));
+    console.info("[decode] stage=rag-pipeline status=completed", {
+      matched: Boolean(ragResponse.error_code),
+      confidence: ragResponse.confidence
+    });
     return res.json(ragResponse);
   } catch (errorDetails) {
-    console.error("[decode] Route failed:", errorDetails.stack || errorDetails);
+    logError("decode", errorDetails);
     return res.status(500).json(emptyResponse("Unable to decode error. Please try again."));
   }
 });
@@ -257,14 +262,26 @@ app.post("/api/followup", async (req, res) => {
     });
     return res.json({ answer });
   } catch (errorDetails) {
-    console.error("[followup] Route failed:", errorDetails.stack || errorDetails);
-    if (errorDetails?.message) {
-      console.error("[followup] Error message:", errorDetails.message);
-    }
+    logError("followup", errorDetails);
     return res.status(500).json({ answer: "I could not generate a follow-up answer right now." });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`SAP decoder server running on port ${PORT}`);
+app.use((error, _req, res, next) => {
+  if (res.headersSent) return next(error);
+
+  const status = Number(error.status || error.statusCode);
+  const responseStatus = status === 400 || status === 413 ? status : 500;
+  const message = responseStatus === 400
+    ? "Invalid JSON request body."
+    : responseStatus === 413
+      ? "Request body is too large."
+      : "Request could not be processed.";
+
+  logError("http", error);
+  return res.status(responseStatus).json(emptyResponse(message));
+});
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`SAP decoder server running on 0.0.0.0:${PORT}`);
 });

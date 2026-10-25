@@ -1,5 +1,6 @@
 const { retrieve } = require("./retriever");
 const { buildPrompt } = require("./prompt");
+const { logError } = require("../logging");
 
 const MIN_RELEVANCE_SCORE = 0.2;
 const NOT_FOUND = "No relevant SAP documentation was found.";
@@ -237,30 +238,46 @@ function buildFollowUpAnswer(question = "", context = {}, conversation = []) {
 
 async function callGroq(prompt) {
   if (!process.env.GROQ_API_KEY) {
-    console.log("[rag:service] LLM call skipped: GROQ_API_KEY is not configured.");
+    console.info("[groq] request skipped; GROQ_API_KEY is not configured.");
     return null;
   }
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model: process.env.GROQ_MODEL || "openai/gpt-oss-120b",
-      temperature: 0,
-      max_completion_tokens: 1000,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: "Format only the supplied retrieved SAP documentation. Never add SAP guidance." },
-        { role: "user", content: prompt }
-      ]
-    })
-  });
-  if (!response.ok) throw new Error(`Groq request failed (${response.status} ${response.statusText}).`);
-  const data = await response.json();
-  const answer = JSON.parse(data.choices?.[0]?.message?.content || "{}");
-  return answer;
+
+  const model = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+  let stage = "request";
+  console.info("[groq] request started", { model });
+
+  try {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0,
+        max_completion_tokens: 1000,
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: "Format only the supplied retrieved SAP documentation. Never add SAP guidance." },
+          { role: "user", content: prompt }
+        ]
+      })
+    });
+    stage = "http-response";
+    console.info("[groq] response received", { status: response.status, ok: response.ok });
+    if (!response.ok) throw new Error(`Groq request failed (${response.status} ${response.statusText}).`);
+
+    stage = "response-json";
+    const data = await response.json();
+    stage = "response-content";
+    const answer = JSON.parse(data.choices?.[0]?.message?.content || "{}");
+    console.info("[groq] response parsed successfully");
+    return answer;
+  } catch (error) {
+    if (error instanceof Error) error.stage = `groq:${stage}`;
+    throw error;
+  }
 }
 
 function constrainToSources(answer, retrieved, score) {
@@ -276,40 +293,48 @@ function constrainToSources(answer, retrieved, score) {
 }
 
 async function decodeWithRag(query) {
-  const retrieved = await retrieve(query, 5);
-  console.log("[rag:service] Retrieval summary", {
+  console.info("[rag] stage=retrieval status=started");
+  let retrieved;
+  try {
+    retrieved = await retrieve(query, 5);
+  } catch (error) {
+    logError("rag:retrieval", error);
+    throw error;
+  }
+  console.info("[rag] stage=retrieval status=completed", {
     documentCount: retrieved.length,
-    documents: retrieved.map((item) => ({ id: item.document.id, errorCode: item.document.error_code, score: Number(item.score.toFixed(4)), matchType: item.matchType || "semantic" }))
+    topMatch: retrieved[0]?.document?.id || null,
+    topScore: retrieved[0] ? Number(retrieved[0].score.toFixed(4)) : null,
+    matchType: retrieved[0]?.matchType || "semantic"
   });
   if (!retrieved.length || retrieved[0].score < MIN_RELEVANCE_SCORE) {
-    const response = emptyResponse();
-    console.log("[rag:service] Final JSON returned", JSON.stringify(response));
-    return response;
+    return emptyResponse();
   }
 
   const deterministic = documentResponse({ document: retrieved[0].document, score: retrieved[0].score, query });
   deterministic.related_errors = buildRelatedErrors(retrieved, retrieved[0].document);
   deterministic.confidence_details = buildConfidenceDetails(retrieved[0].document, retrieved[0].score, query);
   deterministic.confidence_score = scoreToPercent(retrieved[0].score);
-  console.log("[rag:service] Metadata derived from retrieved document", JSON.stringify({
-    source: retrieved[0].document.source,
+  console.info("[rag] stage=response-mapping status=started", {
     id: retrieved[0].document.id,
-    time_to_fix: deterministic.time_to_fix,
-    who_can_fix: deterministic.who_can_fix,
-    risk_level: deterministic.risk_level
-  }));
+    sourceCount: deterministic.sources.length
+  });
   const prompt = buildPrompt(query, retrieved);
   try {
+    console.info("[rag] stage=groq-formatting status=started");
     const generated = await callGroq(prompt);
     const response = isValidResponse(generated) ? constrainToSources(generated, retrieved, retrieved[0].score) : deterministic;
     response.related_errors = buildRelatedErrors(retrieved, response);
     response.confidence_details = buildConfidenceDetails(response, response.confidence || retrieved[0].score, query);
     response.confidence_score = scoreToPercent(response.confidence || retrieved[0].score);
-    console.log("[rag:service] Final JSON returned", JSON.stringify(response));
+    console.info("[rag] stage=response-selection status=completed", {
+      generatedResponseUsed: response !== deterministic,
+      confidence: response.confidence
+    });
     return response;
   } catch (error) {
-    console.error("[rag:service] LLM response unavailable; returning retrieved documentation only.", error.stack || error);
-    console.log("[rag:service] Final JSON returned", JSON.stringify(deterministic));
+    logError(error.stage || "rag:response-mapping", error);
+    console.warn("[rag] Groq formatting unavailable; returning the retrieved knowledge-base record.");
     return deterministic;
   }
 }

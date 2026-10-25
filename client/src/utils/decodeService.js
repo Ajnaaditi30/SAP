@@ -1,7 +1,7 @@
-const LOCAL_DECODE_URL = "http://localhost:5000/decode";
+import { API_BASE_URL } from "./apiUrl";
 
 const FALLBACK_RESPONSE = {
-  result: "Backend is not running on http://localhost:5000. Please start the backend and try again.",
+  result: "The backend is not responding. Please check the backend URL and try again.",
   confidence: "Low",
   hasSensitiveData: false,
   fromCache: false
@@ -69,7 +69,7 @@ const formatRagResponse = (data) => {
 
 export const decodeService = {
   decodeError: async (error) => {
-    const response = await fetch(LOCAL_DECODE_URL, {
+    const response = await fetch(`${API_BASE_URL}/decode`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

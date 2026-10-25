@@ -1,5 +1,6 @@
 const fs = require("fs/promises");
 const path = require("path");
+const { logError } = require("../logging");
 
 const ALIASES_FILE = path.resolve(__dirname, "..", "..", "knowledge_base", "error_aliases.json");
 const KNOWLEDGE_BASE_FILE = path.resolve(__dirname, "..", "..", "knowledge_base", "sap_errors.json");
@@ -15,9 +16,15 @@ function normalizeIdentifier(value) {
 
 async function loadAliases() {
   if (!aliasesPromise) {
+    console.info("[rag:knowledgeBase] stage=alias-load status=started");
     aliasesPromise = fs.readFile(ALIASES_FILE, "utf8").then((text) => {
       const aliases = JSON.parse(text);
+      console.info("[rag:knowledgeBase] stage=alias-load status=completed", { aliasCount: Object.keys(aliases).length });
       return new Map(Object.entries(aliases).map(([alias, id]) => [normalizeIdentifier(alias), id]));
+    }).catch((error) => {
+      aliasesPromise = undefined;
+      logError("rag:knowledge-base-alias-load", error);
+      throw error;
     });
   }
   return aliasesPromise;
@@ -25,16 +32,25 @@ async function loadAliases() {
 
 async function loadDocuments() {
   if (!documentsPromise) {
+    console.info("[rag:knowledgeBase] stage=document-load status=started");
     documentsPromise = fs.readFile(KNOWLEDGE_BASE_FILE, "utf8").then(JSON.parse);
+    documentsPromise = documentsPromise.then((documents) => {
+      console.info("[rag:knowledgeBase] stage=document-load status=completed", { documentCount: documents.length });
+      return documents;
+    }).catch((error) => {
+      documentsPromise = undefined;
+      logError("rag:knowledge-base-document-load", error);
+      throw error;
+    });
   }
   return documentsPromise;
 }
 
 async function resolveAlias(query) {
   const normalizedQuery = normalizeIdentifier(query);
-  console.log("[rag:aliasResolver] Incoming query", { query, normalizedQuery });
+  console.info("[rag:aliasResolver] Alias lookup started", { identifierLength: normalizedQuery.length });
   if (!normalizedQuery) {
-    console.log("[rag:aliasResolver] Resolution result", { matchType: "semantic", matchedAlias: null, documentId: null });
+    console.info("[rag:aliasResolver] Resolution result", { matchType: "semantic", matchedAlias: null, documentId: null });
     return null;
   }
 
@@ -60,7 +76,7 @@ async function resolveAlias(query) {
 
 async function resolveExactRecord(query) {
   const normalizedQuery = normalizeIdentifier(query);
-  console.log("[rag:aliasResolver] Exact-resolution check", { query, normalizedQuery });
+  console.info("[rag:aliasResolver] Exact-resolution check", { identifierLength: normalizedQuery.length });
   if (!normalizedQuery) return null;
 
   const documents = await loadDocuments();

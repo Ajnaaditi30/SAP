@@ -8,8 +8,7 @@ function preprocessQuery(query) {
 
 async function retrieve(query, limit = 5) {
   const preprocessedQuery = preprocessQuery(query);
-  console.log("[rag:retriever] Query received", { query });
-  console.log("[rag:retriever] Query after preprocessing", { preprocessedQuery });
+  console.info("[rag:retriever] Query received", { characterCount: String(query || "").length });
 
   const exactMatch = await resolveExactRecord(query);
   console.log("[rag:retriever] Exact match result", exactMatch ? {
@@ -19,12 +18,13 @@ async function retrieve(query, limit = 5) {
     score: 1
   } : null);
   if (exactMatch) {
-    console.log("[rag:retriever] Exact match selected", { matchType: exactMatch.matchType, alias: exactMatch.alias || null, id: exactMatch.document.id, errorCode: exactMatch.document.error_code });
+    console.info("[rag:retriever] Exact match selected", { matchType: exactMatch.matchType, alias: exactMatch.alias || null, id: exactMatch.document.id, errorCode: exactMatch.document.error_code });
     return [{ document: exactMatch.document, score: 1, vectorScore: 1, matchType: exactMatch.matchType, lexicalOverlap: 1 }];
   }
 
+  console.info("[rag:retriever] Exact match unavailable; starting semantic search");
   const semanticMatches = await search(embed(preprocessedQuery), limit, preprocessedQuery);
-  console.log("[rag:retriever] Semantic search result", {
+  console.info("[rag:retriever] Semantic search completed", {
     count: semanticMatches.length,
     documents: semanticMatches.map((item) => ({ id: item.document.id, errorCode: item.document.error_code, score: Number(item.score.toFixed(4)), vectorScore: Number(item.vectorScore.toFixed(4)) }))
   });

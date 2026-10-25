@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import ErrorOutputFormatter from "../components/ErrorOutputFormatter";
 import HistoryPanel from "../components/HistoryPanel";
+import { API_BASE_URL } from "../utils/apiUrl";
 import { decodeService } from "../utils/decodeService";
 import { historyService } from "../utils/historyService";
 
@@ -232,7 +233,7 @@ function MainAppPage({ darkMode, onToggleTheme, user, onLogin }) {
     setFollowUpError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/followup", {
+      const response = await fetch(`${API_BASE_URL}/api/followup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
